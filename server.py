@@ -1,21 +1,17 @@
 import httpx
 from mcp.server.mcpserver import MCPServer
 
-# Initialize the MCP server
-mcp = MCPServer("Live Map and Weather MCP Server")
+# Initialize the comprehensive MCP server
+mcp = MCPServer("Live Map, Weather, and Travel MCP Server")
+
+# ==================== 1. TOOLS (Actions & Computations) ====================
 
 @mcp.tool()
 async def get_live_location_coordinates(location_name: str) -> str:
     """Get real-world geographical coordinates for any city or address using OpenStreetMap."""
     url = "https://nominatim.openstreetmap.org/search"
-    params = {
-        "q": location_name,
-        "format": "json",
-        "limit": 1
-    }
-    headers = {
-        "User-Agent": "MapServerMCPPortfolio/1.0"
-    }
+    params = {"q": location_name, "format": "json", "limit": 1}
+    headers = {"User-Agent": "MapServerMCPPortfolio/1.0"}
 
     async with httpx.AsyncClient() as client:
         try:
@@ -27,12 +23,7 @@ async def get_live_location_coordinates(location_name: str) -> str:
                 return f"No live geographic data found for '{location_name}'."
 
             result = data[0]
-            display_name = result.get("display_name")
-            lat = result.get("lat")
-            lon = result.get("lon")
-
-            return f"Location: {display_name}\nLatitude: {lat}\nLongitude: {lon}"
-        
+            return f"Location: {result.get('display_name')}\nLatitude: {result.get('lat')}\nLongitude: {result.get('lon')}"
         except Exception as e:
             return f"Error fetching live location data: {str(e)}"
 
@@ -51,26 +42,42 @@ async def get_live_weather(latitude: float, longitude: float) -> str:
             response = await client.get(url, params=params)
             response.raise_for_status()
             data = response.json()
-
             current = data.get("current", {})
             units = data.get("current_units", {})
 
-            temp = current.get("temperature_2m")
-            temp_unit = units.get("temperature_2m", "°C")
-            humidity = current.get("relative_humidity_2m")
-            humidity_unit = units.get("relative_humidity_2m", "%")
-            wind_speed = current.get("wind_speed_10m")
-            wind_unit = units.get("wind_speed_10m", "km/h")
-
             return (
                 f"Current Weather Conditions:\n"
-                f"- Temperature: {temp} {temp_unit}\n"
-                f"- Humidity: {humidity} {humidity_unit}\n"
-                f"- Wind Speed: {wind_speed} {wind_unit}"
+                f"- Temperature: {current.get('temperature_2m')} {units.get('temperature_2m', '°C')}\n"
+                f"- Humidity: {current.get('relative_humidity_2m')} {units.get('relative_humidity_2m', '%')}\n"
+                f"- Wind Speed: {current.get('wind_speed_10m')} {units.get('wind_speed_10m', 'km/h')}"
             )
-        
         except Exception as e:
             return f"Error fetching live weather data: {str(e)}"
+
+# ==================== 2. RESOURCES (Readable Data / URIs) ====================
+
+@mcp.resource("location://favorite-cities")
+def get_favorite_cities() -> str:
+    """Expose a curated list of reference cities for travel and testing."""
+    return (
+        "Curated Reference Locations:\n"
+        "1. Kaiserslautern, Germany (Primary Base)\n"
+        "2. Frankfurt, Germany (Major Transport Hub)\n"
+        "3. Berlin, Germany (Capital)\n"
+        "4. Paris, France (International)"
+    )
+
+# ==================== 3. PROMPTS (Reusable Workflows) ====================
+
+@mcp.prompt()
+def travel_weather_briefing(destination: str) -> str:
+    """Generate a structured workflow prompt to check a destination's coordinates and weather."""
+    return (
+        f"Please perform a complete travel weather briefing for {destination}:\n"
+        f"1. Call the geocoding tool to get the exact latitude and longitude for {destination}.\n"
+        f"2. Use those coordinates to fetch the live weather conditions.\n"
+        f"3. Provide a concise summary of whether current weather conditions are suitable for outdoor walking."
+    )
 
 if __name__ == "__main__":
     mcp.run()
