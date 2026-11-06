@@ -1,21 +1,25 @@
-# Live Map & Weather MCP Server
+# Live Map, Weather, and Travel MCP Server
 
-A Model Context Protocol (MCP) server that provides real-time geographic location lookups and live weather data for AI assistants and MCP-compatible clients (such as Claude Desktop, Antigravity, Cursor, and the MCP Inspector).
+A comprehensive [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server built with Python. It demonstrates all three core MCP primitives — **Tools**, **Resources**, and **Prompts** — providing real-time geocoding, live weather forecasts, curated location data, and structured travel workflow templates for AI clients (such as Claude Desktop, Antigravity, Cursor, and the MCP Inspector).
 
 ---
 
-## Features
+## Features & MCP Capabilities
 
-- **Geocoding Tool (`get_live_location_coordinates`)**:
-  - Resolves any city, place, or street address to geographical coordinates (latitude and longitude) using the [OpenStreetMap Nominatim API](https://nominatim.openstreetmap.org/).
-  - Returns the full display name along with latitude and longitude.
+This server implements the complete trio of MCP primitives:
 
-- **Weather Tool (`get_live_weather`)**:
-  - Fetches current, real-time meteorological conditions for given coordinates using the [Open-Meteo Forecast API](https://open-meteo.com/).
-  - Returns current temperature, relative humidity, and wind speed with appropriate units.
+1. 🛠️ **Tools (Actions & Computations)**
+   - **`get_live_location_coordinates`**: Resolves any address or city to geographical coordinates (latitude and longitude) using the [OpenStreetMap Nominatim API](https://nominatim.openstreetmap.org/).
+   - **`get_live_weather`**: Fetches real-time temperature, relative humidity, and wind speed for any coordinate pair using the [Open-Meteo API](https://open-meteo.com/).
 
-- **No API Keys Required**:
-  - Both OpenStreetMap Nominatim and Open-Meteo provide free-tier access without requiring registration or API tokens.
+2. 📄 **Resources (Readable Context & Data)**
+   - **`location://favorite-cities`**: Exposes a curated list of reference locations (base locations, transport hubs, and capitals) that AI agents can inspect and read directly as contextual data.
+
+3. 💬 **Prompts (Reusable Workflow Templates)**
+   - **`travel_weather_briefing`**: Provides a standardized, step-by-step workflow prompt that guides the AI to geocode a given destination, fetch current weather, and provide outdoor suitability advice.
+
+4. 🔑 **No API Keys Required**
+   - Both OpenStreetMap Nominatim and Open-Meteo provide free-tier access without requiring registration or API tokens.
 
 ---
 
@@ -52,7 +56,7 @@ A Model Context Protocol (MCP) server that provides real-time geographic locatio
 
 ```text
 mcp-server/
-├── server.py          # MCP server implementation and tool definitions
+├── server.py          # MCP server (Tools, Resources, and Prompts)
 ├── requirements.txt   # Project dependencies
 ├── README.md          # Project documentation
 └── venv/              # Python virtual environment (ignored in git)
@@ -60,24 +64,44 @@ mcp-server/
 
 ---
 
-## Available Tools
+## MCP Primitives Reference
 
-### 1. `get_live_location_coordinates`
+### 1. Tools
+
+#### `get_live_location_coordinates`
 Looks up coordinates for an address or city.
-
 - **Parameters**:
   - `location_name` (*string*, required): Name of the city, region, or address (e.g., `"Berlin"`, `"1600 Amphitheatre Parkway, Mountain View, CA"`).
-- **Output**:
-  - Location display name, latitude, and longitude.
+- **Returns**: Formatted text containing display name, latitude, and longitude.
 
-### 2. `get_live_weather`
+#### `get_live_weather`
 Retrieves current weather conditions for given coordinates.
-
 - **Parameters**:
   - `latitude` (*float*, required): Latitude coordinate (e.g., `52.5200`).
   - `longitude` (*float*, required): Longitude coordinate (e.g., `13.4050`).
-- **Output**:
-  - Current temperature (e.g., `°C`), relative humidity (`%`), and wind speed (`km/h`).
+- **Returns**: Formatted text containing temperature, relative humidity, and wind speed with units.
+
+---
+
+### 2. Resources
+
+#### `location://favorite-cities`
+- **URI**: `location://favorite-cities`
+- **Description**: Exposes a curated list of reference locations (e.g., Kaiserslautern, Frankfurt, Berlin, Paris) for testing and travel context.
+- **Format**: Plain text / Markdown list.
+
+---
+
+### 3. Prompts
+
+#### `travel_weather_briefing`
+- **Name**: `travel_weather_briefing`
+- **Arguments**:
+  - `destination` (*string*, required): Destination city or location name to analyze.
+- **Description**: Generates an instruction template directing the LLM to:
+  1. Call `get_live_location_coordinates` for the destination.
+  2. Call `get_live_weather` using the retrieved coordinates.
+  3. Synthesize a concise summary assessing whether weather conditions are suitable for outdoor activities.
 
 ---
 
@@ -93,17 +117,22 @@ python server.py
 
 ### Testing with MCP Inspector
 
-You can test and inspect the tools interactively using the official MCP Inspector:
+You can test and inspect tools, resources, and prompts interactively using the official MCP Inspector:
 
 ```bash
 npx @modelcontextprotocol/inspector /absolute/path/to/venv/bin/python /absolute/path/to/server.py
 ```
 
+Inside the Inspector UI:
+- Under **Tools**: test `get_live_location_coordinates` and `get_live_weather`.
+- Under **Resources**: view and read `location://favorite-cities`.
+- Under **Prompts**: execute `travel_weather_briefing` with a custom destination.
+
 ---
 
 ## Client Configuration
 
-To connect this server to an MCP host, add it to your client's configuration file.
+To connect this server to an MCP host, add it to your client configuration file.
 
 ### Claude Desktop Configuration
 
@@ -122,7 +151,7 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) o
 }
 ```
 
-> **Note**: Update paths above with your absolute system paths.
+> **Note**: Replace `/Users/ashwinlukose/Developer/stuff/mcp-server/...` with your actual system paths.
 
 ---
 
