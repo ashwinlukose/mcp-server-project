@@ -2,6 +2,8 @@
 
 A comprehensive [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server built with Python. It demonstrates all three core MCP primitives — **Tools**, **Resources**, and **Prompts** — providing real-time geocoding, live weather forecasts, curated location data, and structured travel workflow templates for AI clients (such as Claude Desktop, Antigravity, Cursor, and the MCP Inspector).
 
+[![M8ven Score](https://m8ven.ai/badge/mcp/ashwinlukose-mcp-server-project-17njet?v=3cf78f01fd2abfdd281f9e84eecd82bd)](https://m8ven.ai/mcp/ashwinlukose-mcp-server-project-17njet?s=readme)
+
 ---
 
 ## Features & MCP Capabilities
